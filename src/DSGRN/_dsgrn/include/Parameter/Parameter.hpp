@@ -199,17 +199,41 @@ labelling ( void ) const {
       uint64_t left = lower_limits [ d ];
       uint64_t right = upper_limits [ d ];
 
-      // Zone 1. (Flows to right.)
+      // Zone 1 (flows to the right)
       if ( bin > left ) {
         lower_limits [ d ] = left;
-        upper_limits [ d ] = bin;
+        // "Bug" fix to account for self repressor
+        // upper_limits [ d ] = bin;
+        upper_limits [ d ] = std::min ( right, bin );
         apply_mask (1LL << (D+d));
       }
-      // Zone 2. (Flows to left.)
-      if ( bin+1 < right ) {
-        lower_limits [ d ] = bin + 1;
+      // Zone 2 (flows to the left)
+      if ( bin + 1 < right ) {
+        // "Bug" fix to account for self repressor
+        // lower_limits [ d ] = bin + 1;
+        lower_limits [ d ] = std::max ( left, bin + 1);
         upper_limits [ d ] = right;
         apply_mask (1LL << d);
+      }
+    }
+  }
+
+  // Reverse the direction of the flow where needed
+  for ( uint64_t dom_index = 0; dom_index < N; ++ dom_index ) {
+    uint64_t domain = dom_index;
+    for ( uint64_t d = 0; d < D; ++ d ) {
+      // Get coordinate in dimension d
+      uint64_t coord = domain % limits [d];
+      domain = domain / limits [d];
+      if ( network() . reverse ( d ) ) { // Reverse the flow in dimension d
+        uint64_t mask_left = ( 1LL << d );
+        uint64_t mask_right = ( 1LL << (D+d) );
+        if ( coord > 0 ) { // Reverse flow on left wall
+          result [ dom_index ] ^= mask_left; // Toggle bit
+        }
+        if ( coord < limits [d] - 1 ) { // Reverse flow on right wall
+          result [ dom_index ] ^= mask_right; // Toggle bit
+        }
       }
     }
   }

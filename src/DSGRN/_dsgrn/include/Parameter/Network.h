@@ -64,6 +64,11 @@ public:
   std::vector<std::vector<uint64_t>> const&
   logic ( uint64_t index ) const;
 
+  /// reverse
+  ///   Return whether or not to use reversed flow
+  bool
+  reverse ( uint64_t index ) const;
+
   /// essential
   ///   Return whether or not to use only essential logic parameters
   bool
@@ -120,6 +125,7 @@ struct Network_ {
   std::unordered_map<std::pair<uint64_t,uint64_t>, bool, dsgrn::hash<std::pair<uint64_t,uint64_t>>> edge_type_;
   std::unordered_map<std::pair<uint64_t,uint64_t>, uint64_t, dsgrn::hash<std::pair<uint64_t,uint64_t>>> order_;
   std::vector<std::vector<std::vector<uint64_t>>> logic_by_index_;
+  std::vector<bool> reverse_flow_;
   std::vector<bool> essential_;
   std::string specification_;
 };
@@ -143,6 +149,7 @@ NetworkBinding (py::module &m) {
     .def("inputs", &Network::inputs)
     .def("outputs", &Network::outputs)
     .def("logic", &Network::logic)
+    .def("reverse", &Network::reverse)
     .def("essential", &Network::essential)
     .def("interaction", &Network::interaction)
     .def("order", &Network::order)

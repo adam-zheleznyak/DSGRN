@@ -78,10 +78,14 @@ logic ( uint64_t index ) const {
 }
 
 INLINE_IF_HEADER_ONLY bool Network::
+reverse ( uint64_t index ) const {
+  return data_ -> reverse_flow_ [ index ];
+}
+
+INLINE_IF_HEADER_ONLY bool Network::
 essential ( uint64_t index ) const {
   return data_ -> essential_ [ index ];
 }
-  
 
 INLINE_IF_HEADER_ONLY bool Network::
 interaction ( uint64_t source, uint64_t target ) const {
@@ -186,6 +190,7 @@ INLINE_IF_HEADER_ONLY void Network::
 _parse ( std::vector<std::string> const& lines ) {
   using namespace DSGRN_parse_tools;
   std::vector<std::string> logic_strings;
+  std::map<std::string, bool> reversed_flow_nodes;
   std::map<std::string, bool> essential_nodes;
   //std::vector<std::string> constraint_strings;
   // Learn the node names
@@ -198,8 +203,18 @@ _parse ( std::vector<std::string> const& lines ) {
     data_ ->  name_by_index_ . push_back ( splitline[0] );
     // If no logic specified, zero inputs.
     if ( splitline . size () < 2 ) {
-      logic_strings . push_back ( " ");
+      reversed_flow_nodes [ splitline[0] ] = false;
+      logic_strings . push_back ( " " );
     } else {
+      // Remove leading white space
+      splitline[1] = std::regex_replace ( splitline[1], std::regex("^\\s+"), "" );
+      if ( splitline[1][0] == '-' ) {
+        reversed_flow_nodes [ splitline[0] ] = true;
+        // Remove the first character (-)
+        splitline[1] . erase( splitline[1] . begin() );
+      } else {
+        reversed_flow_nodes [ splitline[0] ] = false;
+      }
       logic_strings . push_back ( splitline[1] );
     }
     //std::cout << line << " has " << splitline.size() << " parts.\n";
@@ -213,9 +228,11 @@ _parse ( std::vector<std::string> const& lines ) {
   }
   // Index the node names
   uint64_t loop_index = 0;
+  data_ -> reverse_flow_ . resize ( reversed_flow_nodes . size () );
   data_ -> essential_ . resize ( essential_nodes . size () );
-  for ( auto const& name : data_ ->  name_by_index_ ) { 
-    data_ ->  index_by_name_ [ name ] = loop_index; 
+  for ( auto const& name : data_ -> name_by_index_ ) {
+    data_ -> index_by_name_ [ name ] = loop_index;
+    data_ -> reverse_flow_ [ loop_index ] = reversed_flow_nodes [ name ];
     data_ -> essential_ [ loop_index ] = essential_nodes [ name ];
     ++ loop_index;
   }
