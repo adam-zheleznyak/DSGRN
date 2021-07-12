@@ -154,7 +154,9 @@ assign ( MultipleThresholdNetwork const& network ) {
           for ( uint64_t i = 0; i <= threshold_count; i++ ) {
             good_bits . push_back ( std::inner_product( powers_of_two.begin(), powers_of_two.end(), threshold_scan.begin(), 0 ) );
             //std::cout << good_bits[i] << "\n";
-            threshold_scan[i] = 1 - threshold_scan[i];
+            if (i < threshold_count) {
+              threshold_scan[i] = 1 - threshold_scan[i];
+            }
           }
           for ( uint64_t bit = 0; bit < pow( 2, threshold_count ); bit++ ) {
             if ( std::find(good_bits.begin(), good_bits.end(), bit ) == good_bits.end() ) {
